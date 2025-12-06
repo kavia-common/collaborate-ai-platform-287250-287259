@@ -14,13 +14,17 @@ export const LOGIN_MUTATION = gql`
 `;
 
 export const REGISTER_MUTATION = gql`
-  mutation Register($username: String!, $email: String!, $password: String!) {
-    register(username: $username, email: $email, password: $password) {
+  mutation Register($input: RegisterInput!) {
+    register(input: $input) {
       token
       user {
         id
         email
         username
+        company {
+          id
+          name
+        }
       }
     }
   }

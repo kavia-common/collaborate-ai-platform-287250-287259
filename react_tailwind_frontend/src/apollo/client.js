@@ -4,8 +4,10 @@ import { createClient } from 'graphql-ws';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { setContext } from '@apollo/client/link/context';
 
+const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001/graphql';
+
 const httpLink = new HttpLink({
-  uri: 'http://localhost:3001/graphql',
+  uri: backendUrl,
 });
 
 const authLink = setContext((_, { headers }) => {
@@ -18,8 +20,10 @@ const authLink = setContext((_, { headers }) => {
   }
 });
 
+const wsUrl = process.env.REACT_APP_WS_URL || backendUrl.replace(/^http/, 'ws');
+
 const wsLink = new GraphQLWsLink(createClient({
-  url: 'ws://localhost:3001/graphql',
+  url: wsUrl,
   connectionParams: () => {
      const token = localStorage.getItem('token');
      return {

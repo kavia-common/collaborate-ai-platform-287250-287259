@@ -9,7 +9,8 @@ const Register = () => {
     username: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    companyName: ''
   });
   const [validationErrors, setValidationErrors] = useState({});
   const [serverError, setServerError] = useState('');
@@ -37,6 +38,7 @@ const Register = () => {
     if (!formData.password) errors.password = 'Password is required';
     else if (formData.password.length < 6) errors.password = 'Password must be at least 6 characters';
     if (formData.password !== formData.confirmPassword) errors.confirmPassword = 'Passwords do not match';
+    if (!formData.companyName.trim()) errors.companyName = 'Company Name is required';
     
     return errors;
   };
@@ -58,9 +60,12 @@ const Register = () => {
     if (Object.keys(errors).length === 0) {
       register({ 
         variables: { 
-          username: formData.username, 
-          email: formData.email, 
-          password: formData.password 
+          input: {
+            username: formData.username, 
+            email: formData.email, 
+            password: formData.password,
+            companyName: formData.companyName
+          }
         } 
       });
     }
@@ -118,6 +123,26 @@ const Register = () => {
             />
             {validationErrors.email && (
               <p className="text-red-500 text-xs mt-1">{validationErrors.email}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-gray-700 text-sm font-medium mb-1" htmlFor="companyName">
+              Company Name
+            </label>
+            <input
+              type="text"
+              id="companyName"
+              name="companyName"
+              value={formData.companyName}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                validationErrors.companyName ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Acme Inc."
+            />
+            {validationErrors.companyName && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.companyName}</p>
             )}
           </div>
 
