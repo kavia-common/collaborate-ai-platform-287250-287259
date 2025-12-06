@@ -1,7 +1,22 @@
 import React from 'react';
+import Skeleton from '../common/Skeleton';
 
 // PUBLIC_INTERFACE
-const KPICard = ({ title, value, icon, color = 'blue' }) => {
+const KPICard = ({ title, value, icon, color = 'blue', loading = false }) => {
+  if (loading) {
+    return (
+      <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-full flex flex-col justify-center">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+          <Skeleton className="h-12 w-12 rounded-lg" />
+        </div>
+      </div>
+    );
+  }
+
   const colorClasses = {
     blue: 'bg-blue-50 text-blue-600',
     amber: 'bg-amber-50 text-amber-600',

@@ -1,12 +1,16 @@
 import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import Skeleton from '../common/Skeleton';
 
 // PUBLIC_INTERFACE
-const DashboardTable = ({ projects, events }) => {
+const DashboardTable = ({ projects, events, loading = false }) => {
   const [sortField, setSortField] = useState('date');
   const [sortDirection, setSortDirection] = useState('desc');
   const [filter, setFilter] = useState('');
 
   const data = useMemo(() => {
+    if (loading) return [];
+    
     const combined = [
       ...(projects || []).map(p => ({
         id: p.id,
@@ -49,7 +53,7 @@ const DashboardTable = ({ projects, events }) => {
         return 0;
       })
       .slice(0, 10); // Show top 10 recent
-  }, [projects, events, filter, sortField, sortDirection]);
+  }, [projects, events, filter, sortField, sortDirection, loading]);
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -96,31 +100,55 @@ const DashboardTable = ({ projects, events }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {data.length > 0 ? data.map((item) => (
-              <tr key={`${item.type}-${item.id}`} className="hover:bg-blue-50/30 transition text-sm">
-                <td className="p-4">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      item.type === 'Project' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
-                  }`}>
-                    {item.type}
-                  </span>
-                </td>
-                <td className="p-4 font-medium text-gray-800">{item.name}</td>
-                <td className="p-4">
-                    <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                        item.status.toLowerCase().includes('active') || item.status === 'Upcoming' ? 'bg-green-500' : 'bg-gray-400'
-                    }`}></span>
-                    <span className="text-gray-600">{item.status}</span>
-                </td>
-                <td className="p-4 text-gray-500">
-                    {item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}
-                </td>
-              </tr>
-            )) : (
-              <tr>
-                  <td colSpan="4" className="p-8 text-center text-gray-500">
-                      No matching records found.
+            {loading ? (
+              // Loading Skeleton Rows
+              [...Array(5)].map((_, i) => (
+                <tr key={`skeleton-${i}`} className="border-b border-gray-50">
+                  <td className="p-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                  <td className="p-4"><Skeleton className="h-5 w-48" /></td>
+                  <td className="p-4 flex items-center"><Skeleton className="h-2 w-2 rounded-full mr-2" /><Skeleton className="h-4 w-16" /></td>
+                  <td className="p-4"><Skeleton className="h-4 w-24" /></td>
+                </tr>
+              ))
+            ) : data.length > 0 ? (
+              data.map((item) => (
+                <tr key={`${item.type}-${item.id}`} className="hover:bg-blue-50/30 transition text-sm">
+                  <td className="p-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        item.type === 'Project' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {item.type}
+                    </span>
                   </td>
+                  <td className="p-4 font-medium text-gray-800">{item.name}</td>
+                  <td className="p-4">
+                      <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                          item.status.toLowerCase().includes('active') || item.status === 'Upcoming' ? 'bg-green-500' : 'bg-gray-400'
+                      }`}></span>
+                      <span className="text-gray-600">{item.status}</span>
+                  </td>
+                  <td className="p-4 text-gray-500">
+                      {item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              // Empty State
+              <tr>
+                <td colSpan="4" className="p-12 text-center">
+                   <div className="flex flex-col items-center justify-center text-gray-400">
+                      <svg className="w-12 h-12 mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      <p className="text-gray-500 font-medium mb-1">No activity found</p>
+                      <p className="text-sm text-gray-400 mb-4">Get started by creating a project or event.</p>
+                      <div className="flex gap-3">
+                         <Link to="/projects" className="text-primary hover:text-primary-dark text-sm font-medium hover:underline">Create Project</Link>
+                         <span className="text-gray-300">|</span>
+                         <Link to="/events" className="text-primary hover:text-primary-dark text-sm font-medium hover:underline">Create Event</Link>
+                      </div>
+                   </div>
+                </td>
               </tr>
             )}
           </tbody>
