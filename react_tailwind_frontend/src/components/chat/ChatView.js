@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useQuery, useMutation } from '@apollo/client';
+import { useQuery, useMutation, useReactiveVar } from '@apollo/client';
+import { isWsConnected } from '../../apollo/client';
 import { 
     GET_CHAT, 
     GET_CHAT_MESSAGES, 
@@ -15,6 +16,7 @@ import TypingIndicator from './TypingIndicator';
 
 const ChatView = ({ chatId, onBack }) => {
   const bottomRef = useRef(null);
+  const connected = useReactiveVar(isWsConnected);
   
   // Queries
   const { data: chatData, loading: chatLoading } = useQuery(GET_CHAT, {
@@ -166,18 +168,35 @@ const ChatView = ({ chatId, onBack }) => {
             </div>
             <div>
                 <h2 className="font-bold text-gray-800">{chatName}</h2>
-                <p className="text-xs text-green-500 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                    Active
-                </p>
+                <div className="flex items-center gap-2">
+                    {connected ? (
+                        <p className="text-xs text-green-500 flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                            Online
+                        </p>
+                    ) : (
+                        <p className="text-xs text-red-500 flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                            Disconnected
+                        </p>
+                    )}
+                </div>
             </div>
         </div>
+
+        {/* Connection Error Banner */}
+        {!connected && (
+            <div className="bg-red-50 px-4 py-2 text-xs text-red-600 border-b border-red-100 flex items-center justify-center">
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                Reconnecting to chat server...
+            </div>
+        )}
 
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50/30">
             {messages.length === 0 ? (
                 <div className="text-center py-10 text-gray-400 text-sm">
-                    No messages here yet. Say hello!
+                    {connected ? "No messages here yet. Say hello!" : "Waiting for connection..."}
                 </div>
             ) : (
                 messages.map((msg, idx) => (

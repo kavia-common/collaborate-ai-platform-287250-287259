@@ -4,11 +4,15 @@
   "private": true,
   "dependencies": {
     "@apollo/client": "^3.11.0",
+    "@google/genai": "^1.0.0",
+    "@google/generative-ai": "^0.24.1",
     "graphql": "^16.9.0",
     "graphql-ws": "^5.16.0",
     "jwt-decode": "^4.0.0",
+    "lucide-react": "^0.556.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^6.24.0",
     "react-scripts": "^5.0.1"
   },
