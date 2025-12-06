@@ -7,7 +7,20 @@ import { setContext } from '@apollo/client/link/context';
 
 // PUBLIC_INTERFACE
 // Resolve backend URL ensuring it points to the graphql endpoint
-let backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://vscode-internal-12711-beta.beta01.cloud.kavia.ai:3001/graphql';
+const getBackendUrl = () => {
+  if (process.env.REACT_APP_BACKEND_URL) {
+    return process.env.REACT_APP_BACKEND_URL;
+  }
+  // Dynamic default based on current window location
+  // This ensures it works in different environments without hardcoding
+  // We assume the backend is on port 3001 of the same host
+  const protocol = window.location.protocol;
+  const hostname = window.location.hostname;
+  const port = '3001'; 
+  return `${protocol}//${hostname}:${port}/graphql`;
+};
+
+let backendUrl = getBackendUrl();
 
 // Ensure requests go to the exact '/graphql' path
 // This fixes issues where the environment variable might lack the path
@@ -33,7 +46,24 @@ const authLink = setContext((_, { headers }) => {
   }
 });
 
-const wsUrl = process.env.REACT_APP_WS_URL || backendUrl.replace(/^http/, 'ws');
+// Determine WebSocket URL dynamically to handle http/https correctly
+const getWsUrl = (httpUrl) => {
+  if (process.env.REACT_APP_WS_URL) return process.env.REACT_APP_WS_URL;
+
+  // Convert http(s) to ws(s)
+  let url = httpUrl.replace(/^http/, 'ws');
+  
+  // CRITICAL: Force wss:// if the page is served over https://
+  // This prevents SecurityError/Mixed Content issues
+  if (window.location.protocol === 'https:' && url.startsWith('ws:')) {
+    url = url.replace(/^ws:/, 'wss:');
+  }
+  
+  return url;
+};
+
+const wsUrl = getWsUrl(backendUrl);
+console.log('Apollo WebSocket connecting to:', wsUrl);
 
 const wsLink = new GraphQLWsLink(createClient({
   url: wsUrl,
