@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_PROJECTS, CREATE_PROJECT, UPDATE_PROJECT, DELETE_PROJECT } from '../graphql/projectOperations';
-
-// Valid Project Status Enums matching Backend
-const PROJECT_STATUS = {
-  PLANNED: 'PLANNED',
-  IN_PROGRESS: 'IN_PROGRESS',
-  ON_HOLD: 'ON_HOLD',
-  COMPLETED: 'COMPLETED',
-  ARCHIVED: 'ARCHIVED'
-};
+import ProjectList from '../components/projects/ProjectList';
+import ProjectForm from '../components/projects/ProjectForm';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 
 const Projects = () => {
   const { data, loading, error, refetch } = useQuery(GET_PROJECTS, {
@@ -37,6 +31,7 @@ const Projects = () => {
   const [deleteProject, { loading: deleting }] = useMutation(DELETE_PROJECT, {
     onCompleted: () => {
       refetch();
+      setProjectToDelete(null);
       showToast('Project deleted successfully!', 'success');
     },
     onError: (err) => showToast(err.message || 'Failed to delete project', 'error')
@@ -44,16 +39,9 @@ const Projects = () => {
 
   // State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentProject, setCurrentProject] = useState(null); // If null, we are creating
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    status: PROJECT_STATUS.PLANNED,
-    startDate: '',
-    endDate: ''
-  });
-  const [formErrors, setFormErrors] = useState({});
-  const [toast, setToast] = useState(null); // { message, type }
+  const [editingProject, setEditingProject] = useState(null);
+  const [projectToDelete, setProjectToDelete] = useState(null);
+  const [toast, setToast] = useState(null);
 
   // Clear toast after 3 seconds
   useEffect(() => {
@@ -67,78 +55,32 @@ const Projects = () => {
     setToast({ message, type });
   };
 
-  const openCreateModal = () => {
-    setCurrentProject(null);
-    setFormData({
-      title: '',
-      description: '',
-      status: PROJECT_STATUS.PLANNED,
-      startDate: '',
-      endDate: ''
-    });
-    setFormErrors({});
+  const handleCreate = () => {
+    setEditingProject(null);
     setIsModalOpen(true);
   };
 
-  // Helper to safely parse date from string or number
-  const safeDate = (val) => {
-    if (!val) return null;
-    const d = isNaN(Number(val)) ? new Date(val) : new Date(Number(val));
-    return isNaN(d.getTime()) ? null : d;
+  const handleEdit = (project) => {
+    setEditingProject(project);
+    setIsModalOpen(true);
   };
 
-  const openEditModal = (project) => {
-    setCurrentProject(project);
-    const start = safeDate(project.startDate);
-    const end = safeDate(project.endDate);
+  const handleDeleteClick = (project) => {
+    setProjectToDelete(project);
+  };
 
-    // Map legacy/local values to valid Enum
-    let status = project.status;
-    if (status === 'PLANNING') status = PROJECT_STATUS.PLANNED;
-    if (status === 'planning') status = PROJECT_STATUS.PLANNED;
-    if (status === 'active') status = PROJECT_STATUS.IN_PROGRESS;
-    if (status === 'completed') status = PROJECT_STATUS.COMPLETED;
-    if (status === 'on_hold') status = PROJECT_STATUS.ON_HOLD;
-    if (status === 'archived') status = PROJECT_STATUS.ARCHIVED;
-
-    setFormData({
-      title: project.title,
-      description: project.description || '',
-      status: status,
-      startDate: start ? start.toISOString().split('T')[0] : '',
-      endDate: end ? end.toISOString().split('T')[0] : ''
-    });
-    setFormErrors({});
-    setIsModalOpen(true);
+  const confirmDelete = () => {
+    if (projectToDelete) {
+      deleteProject({ variables: { id: projectToDelete.id } });
+    }
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setCurrentProject(null);
+    setEditingProject(null);
   };
 
-  const validateForm = () => {
-    const errors = {};
-    if (!formData.title.trim()) errors.title = 'Project title is required';
-    
-    // Validate Status
-    if (!Object.values(PROJECT_STATUS).includes(formData.status)) {
-        errors.status = 'Invalid status selected';
-    }
-
-    if (formData.startDate && formData.endDate) {
-      if (new Date(formData.endDate) < new Date(formData.startDate)) {
-        errors.endDate = 'End date cannot be before start date';
-      }
-    }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
+  const handleFormSubmit = (formData) => {
     const inputData = {
       title: formData.title,
       description: formData.description,
@@ -147,11 +89,11 @@ const Projects = () => {
       endDate: formData.endDate || null
     };
 
-    if (currentProject) {
+    if (editingProject) {
       updateProject({ 
         variables: { 
           input: {
-            id: currentProject.id, 
+            id: editingProject.id, 
             ...inputData
           }
         } 
@@ -163,39 +105,6 @@ const Projects = () => {
         } 
       });
     }
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
-      deleteProject({ variables: { id } });
-    }
-  };
-
-  // Helper to format timestamps or date strings
-  const formatDate = (dateVal) => {
-    const date = safeDate(dateVal);
-    if (!date) return '-';
-    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-  };
-
-  // Helper for status styling
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case PROJECT_STATUS.COMPLETED: return 'bg-green-100 text-green-800 border-green-200';
-      case PROJECT_STATUS.IN_PROGRESS: return 'bg-blue-100 text-blue-800 border-blue-200';
-      case PROJECT_STATUS.ON_HOLD: return 'bg-amber-100 text-amber-800 border-amber-200';
-      case PROJECT_STATUS.ARCHIVED: return 'bg-gray-200 text-gray-700 border-gray-300';
-      case PROJECT_STATUS.PLANNED:
-      case 'PLANNING': // Legacy support
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  // Helper for Friendly Status Display
-  const formatStatus = (status) => {
-    if (status === 'PLANNING') return 'Planned';
-    // Replace underscores and Title Case
-    return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
   };
 
   return (
@@ -223,7 +132,7 @@ const Projects = () => {
           <p className="text-text-secondary text-sm">Manage, track, and collaborate on projects</p>
         </div>
         <button 
-          onClick={openCreateModal}
+          onClick={handleCreate}
           className="bg-primary text-white px-5 py-2.5 rounded-lg hover:bg-primary-700 transition shadow-sm hover:shadow-md flex items-center gap-2 group"
         >
           <svg className="w-5 h-5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
@@ -250,182 +159,34 @@ const Projects = () => {
         </div>
       )}
 
-      {/* Projects Grid */}
+      {/* Projects List */}
       {!loading && !error && (
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-          {data?.getProjects?.length > 0 ? (
-            data.getProjects.map(project => (
-              <div key={project.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 flex flex-col group h-full">
-                <div className="p-6 flex-1">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusStyle(project.status)}`}>
-                      {formatStatus(project.status)}
-                    </span>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={() => openEditModal(project)}
-                        className="p-1.5 text-gray-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Edit Project"
-                      >
-                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(project.id)}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete Project"
-                      >
-                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1" title={project.title}>{project.title}</h3>
-                  <p className="text-gray-500 text-sm mb-4 line-clamp-3 h-14">
-                    {project.description || 'No description provided.'}
-                  </p>
-
-                  <div className="flex items-center gap-4 text-xs text-gray-400 border-t pt-4 mt-auto">
-                    <div className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                      <span>Start: {formatDate(project.startDate)}</span>
-                    </div>
-                    {project.endDate && (
-                      <div className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        <span>Due: {formatDate(project.endDate)}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="col-span-full py-16 text-center bg-white rounded-xl border border-dashed border-gray-200">
-                <div className="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-medium text-gray-900">No projects yet</h3>
-                <p className="mt-1 text-gray-500 max-w-sm mx-auto mb-6">Create your first project to start tracking tasks and collaborating with your team.</p>
-                <button 
-                  onClick={openCreateModal}
-                  className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition"
-                >
-                  Create Project
-                </button>
-            </div>
-          )}
-        </div>
+        <ProjectList 
+          projects={data?.getProjects || []} 
+          onEdit={handleEdit} 
+          onDelete={handleDeleteClick}
+          onCreate={handleCreate}
+        />
       )}
 
-      {/* Modal Form */}
-      {isModalOpen && (
-        <>
-          <div 
-            className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40 transition-opacity"
-            onClick={closeModal}
-          ></div>
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg pointer-events-auto transform transition-all animate-fade-in-up">
-              <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
-                <h3 className="text-xl font-bold text-gray-900">
-                  {currentProject ? 'Edit Project' : 'Create New Project'}
-                </h3>
-                <button 
-                  onClick={closeModal}
-                  className="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
-              
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Project Title <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all ${formErrors.title ? 'border-red-500' : 'border-gray-200'}`}
-                    placeholder="e.g. Website Redesign"
-                    value={formData.title}
-                    onChange={e => setFormData({...formData, title: e.target.value})}
-                  />
-                  {formErrors.title && <p className="text-red-500 text-xs mt-1">{formErrors.title}</p>}
-                </div>
+      {/* Create/Edit Modal */}
+      <ProjectForm 
+        isOpen={isModalOpen} 
+        onClose={closeModal} 
+        onSubmit={handleFormSubmit} 
+        initialData={editingProject}
+        isSubmitting={creating || updating}
+      />
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                    <select
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all bg-white ${formErrors.status ? 'border-red-500' : 'border-gray-200'}`}
-                      value={formData.status}
-                      onChange={e => setFormData({...formData, status: e.target.value})}
-                    >
-                      <option value={PROJECT_STATUS.PLANNED}>Planned</option>
-                      <option value={PROJECT_STATUS.IN_PROGRESS}>In Progress</option>
-                      <option value={PROJECT_STATUS.ON_HOLD}>On Hold</option>
-                      <option value={PROJECT_STATUS.COMPLETED}>Completed</option>
-                      <option value={PROJECT_STATUS.ARCHIVED}>Archived</option>
-                    </select>
-                     {formErrors.status && <p className="text-red-500 text-xs mt-1">{formErrors.status}</p>}
-                  </div>
-                  {/* Empty col for spacing or future field */}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                    <input
-                      type="date"
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                      value={formData.startDate}
-                      onChange={e => setFormData({...formData, startDate: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                    <input
-                      type="date"
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all ${formErrors.endDate ? 'border-red-500' : 'border-gray-200'}`}
-                      value={formData.endDate}
-                      onChange={e => setFormData({...formData, endDate: e.target.value})}
-                    />
-                     {formErrors.endDate && <p className="text-red-500 text-xs mt-1">{formErrors.endDate}</p>}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none h-24"
-                    placeholder="Brief description of the project goals..."
-                    value={formData.description}
-                    onChange={e => setFormData({...formData, description: e.target.value})}
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4 border-t border-gray-100 mt-4">
-                  <button 
-                    type="button" 
-                    onClick={closeModal}
-                    className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    disabled={creating || updating}
-                    className="flex-1 px-4 py-2 text-white bg-primary hover:bg-primary-700 rounded-lg font-medium shadow-md shadow-blue-500/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-                  >
-                    {(creating || updating) && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>}
-                    {currentProject ? 'Update Project' : 'Create Project'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </>
-      )}
+      {/* Delete Confirmation */}
+      <ConfirmDialog 
+        isOpen={!!projectToDelete} 
+        onClose={() => setProjectToDelete(null)} 
+        onConfirm={confirmDelete}
+        title="Delete Project"
+        message={`Are you sure you want to delete "${projectToDelete?.title}"? This action cannot be undone.`}
+        isDeleting={true}
+      />
     </div>
   );
 };
