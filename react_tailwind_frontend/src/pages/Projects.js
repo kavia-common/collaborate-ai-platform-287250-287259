@@ -2,6 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_PROJECTS, CREATE_PROJECT, UPDATE_PROJECT, DELETE_PROJECT } from '../graphql/projectOperations';
 
+// Valid Project Status Enums matching Backend
+const PROJECT_STATUS = {
+  PLANNED: 'PLANNED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  ON_HOLD: 'ON_HOLD',
+  COMPLETED: 'COMPLETED'
+};
+
 const Projects = () => {
   const { data, loading, error, refetch } = useQuery(GET_PROJECTS, {
     notifyOnNetworkStatusChange: true,
@@ -39,7 +47,7 @@ const Projects = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    status: 'PLANNING',
+    status: PROJECT_STATUS.PLANNED,
     startDate: '',
     endDate: ''
   });
@@ -63,7 +71,7 @@ const Projects = () => {
     setFormData({
       title: '',
       description: '',
-      status: 'PLANNING',
+      status: PROJECT_STATUS.PLANNED,
       startDate: '',
       endDate: ''
     });
@@ -83,10 +91,14 @@ const Projects = () => {
     const start = safeDate(project.startDate);
     const end = safeDate(project.endDate);
 
+    // Map legacy/local values to valid Enum
+    let status = project.status;
+    if (status === 'PLANNING') status = PROJECT_STATUS.PLANNED;
+
     setFormData({
       title: project.title,
       description: project.description || '',
-      status: project.status,
+      status: status,
       startDate: start ? start.toISOString().split('T')[0] : '',
       endDate: end ? end.toISOString().split('T')[0] : ''
     });
@@ -102,6 +114,12 @@ const Projects = () => {
   const validateForm = () => {
     const errors = {};
     if (!formData.title.trim()) errors.title = 'Project title is required';
+    
+    // Validate Status
+    if (!Object.values(PROJECT_STATUS).includes(formData.status)) {
+        errors.status = 'Invalid status selected';
+    }
+
     if (formData.startDate && formData.endDate) {
       if (new Date(formData.endDate) < new Date(formData.startDate)) {
         errors.endDate = 'End date cannot be before start date';
@@ -157,12 +175,20 @@ const Projects = () => {
   // Helper for status styling
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'COMPLETED': return 'bg-green-100 text-green-800 border-green-200';
-      case 'IN_PROGRESS': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'ON_HOLD': return 'bg-amber-100 text-amber-800 border-amber-200';
-      case 'PLANNING':
+      case PROJECT_STATUS.COMPLETED: return 'bg-green-100 text-green-800 border-green-200';
+      case PROJECT_STATUS.IN_PROGRESS: return 'bg-blue-100 text-blue-800 border-blue-200';
+      case PROJECT_STATUS.ON_HOLD: return 'bg-amber-100 text-amber-800 border-amber-200';
+      case PROJECT_STATUS.PLANNED:
+      case 'PLANNING': // Legacy support
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
+  };
+
+  // Helper for Friendly Status Display
+  const formatStatus = (status) => {
+    if (status === 'PLANNING') return 'Planned';
+    // Replace underscores and Title Case
+    return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
   };
 
   return (
@@ -226,7 +252,7 @@ const Projects = () => {
                 <div className="p-6 flex-1">
                   <div className="flex justify-between items-start mb-4">
                     <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusStyle(project.status)}`}>
-                      {project.status.replace('_', ' ')}
+                      {formatStatus(project.status)}
                     </span>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button 
@@ -324,15 +350,16 @@ const Projects = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                     <select
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all bg-white"
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all bg-white ${formErrors.status ? 'border-red-500' : 'border-gray-200'}`}
                       value={formData.status}
                       onChange={e => setFormData({...formData, status: e.target.value})}
                     >
-                      <option value="PLANNING">Planning</option>
-                      <option value="IN_PROGRESS">In Progress</option>
-                      <option value="ON_HOLD">On Hold</option>
-                      <option value="COMPLETED">Completed</option>
+                      <option value={PROJECT_STATUS.PLANNED}>Planned</option>
+                      <option value={PROJECT_STATUS.IN_PROGRESS}>In Progress</option>
+                      <option value={PROJECT_STATUS.ON_HOLD}>On Hold</option>
+                      <option value={PROJECT_STATUS.COMPLETED}>Completed</option>
                     </select>
+                     {formErrors.status && <p className="text-red-500 text-xs mt-1">{formErrors.status}</p>}
                   </div>
                   {/* Empty col for spacing or future field */}
                 </div>
