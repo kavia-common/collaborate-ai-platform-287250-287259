@@ -4,7 +4,17 @@ import { createClient } from 'graphql-ws';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { setContext } from '@apollo/client/link/context';
 
-const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://vscode-internal-12711-beta.beta01.cloud.kavia.ai:3001/graphql';
+// PUBLIC_INTERFACE
+// Resolve backend URL ensuring it points to the graphql endpoint
+let backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://vscode-internal-12711-beta.beta01.cloud.kavia.ai:3001/graphql';
+
+// Ensure requests go to the exact '/graphql' path
+// This fixes issues where the environment variable might lack the path
+if (!backendUrl.endsWith('/graphql')) {
+  // Remove trailing slash if present
+  backendUrl = backendUrl.replace(/\/+$/, '');
+  backendUrl = `${backendUrl}/graphql`;
+}
 
 console.log('Apollo Client connecting to:', backendUrl);
 
