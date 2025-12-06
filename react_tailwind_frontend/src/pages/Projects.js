@@ -7,7 +7,8 @@ const PROJECT_STATUS = {
   PLANNED: 'PLANNED',
   IN_PROGRESS: 'IN_PROGRESS',
   ON_HOLD: 'ON_HOLD',
-  COMPLETED: 'COMPLETED'
+  COMPLETED: 'COMPLETED',
+  ARCHIVED: 'ARCHIVED'
 };
 
 const Projects = () => {
@@ -94,6 +95,11 @@ const Projects = () => {
     // Map legacy/local values to valid Enum
     let status = project.status;
     if (status === 'PLANNING') status = PROJECT_STATUS.PLANNED;
+    if (status === 'planning') status = PROJECT_STATUS.PLANNED;
+    if (status === 'active') status = PROJECT_STATUS.IN_PROGRESS;
+    if (status === 'completed') status = PROJECT_STATUS.COMPLETED;
+    if (status === 'on_hold') status = PROJECT_STATUS.ON_HOLD;
+    if (status === 'archived') status = PROJECT_STATUS.ARCHIVED;
 
     setFormData({
       title: project.title,
@@ -178,6 +184,7 @@ const Projects = () => {
       case PROJECT_STATUS.COMPLETED: return 'bg-green-100 text-green-800 border-green-200';
       case PROJECT_STATUS.IN_PROGRESS: return 'bg-blue-100 text-blue-800 border-blue-200';
       case PROJECT_STATUS.ON_HOLD: return 'bg-amber-100 text-amber-800 border-amber-200';
+      case PROJECT_STATUS.ARCHIVED: return 'bg-gray-200 text-gray-700 border-gray-300';
       case PROJECT_STATUS.PLANNED:
       case 'PLANNING': // Legacy support
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -358,6 +365,7 @@ const Projects = () => {
                       <option value={PROJECT_STATUS.IN_PROGRESS}>In Progress</option>
                       <option value={PROJECT_STATUS.ON_HOLD}>On Hold</option>
                       <option value={PROJECT_STATUS.COMPLETED}>Completed</option>
+                      <option value={PROJECT_STATUS.ARCHIVED}>Archived</option>
                     </select>
                      {formErrors.status && <p className="text-red-500 text-xs mt-1">{formErrors.status}</p>}
                   </div>
