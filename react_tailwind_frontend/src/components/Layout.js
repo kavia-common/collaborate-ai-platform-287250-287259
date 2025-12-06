@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import ChatBot from './aiChat/ChatBot';
 
 // PUBLIC_INTERFACE
 const Layout = ({ children }) => {
@@ -10,7 +11,7 @@ const Layout = ({ children }) => {
     <div className="min-h-screen bg-background flex flex-col md:flex-row font-sans">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      <div className="flex-1 flex flex-col min-h-screen transition-all duration-300">
+      <div className="flex-1 flex flex-col min-h-screen transition-all duration-300 relative">
         <Header onMenuClick={() => setSidebarOpen(true)} />
         
         <main className="flex-1 p-4 md:p-8 overflow-x-hidden bg-gradient-to-br from-blue-500/5 to-gray-50">
@@ -18,6 +19,9 @@ const Layout = ({ children }) => {
              {children}
            </div>
         </main>
+
+        {/* Integrated AI Chatbot */}
+        <ChatBot />
       </div>
     </div>
   );
