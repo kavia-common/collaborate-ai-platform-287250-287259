@@ -116,8 +116,9 @@ const Projects = () => {
     if (!validateForm()) return;
 
     const inputData = {
-      ...formData,
-      // Ensure dates are strings or null if empty
+      title: formData.title,
+      description: formData.description,
+      status: formData.status,
       startDate: formData.startDate || null,
       endDate: formData.endDate || null
     };
