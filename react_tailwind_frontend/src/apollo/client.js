@@ -4,7 +4,9 @@ import { createClient } from 'graphql-ws';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { setContext } from '@apollo/client/link/context';
 
-const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001/graphql';
+const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://vscode-internal-12711-beta.beta01.cloud.kavia.ai:3001/graphql';
+
+console.log('Apollo Client connecting to:', backendUrl);
 
 const httpLink = new HttpLink({
   uri: backendUrl,
