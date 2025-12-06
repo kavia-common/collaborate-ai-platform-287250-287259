@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
 import Events from './pages/Events';
 import Messages from './pages/Messages';
+import Chat from './pages/Chat';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import './App.css';
@@ -52,6 +53,13 @@ function App() {
                   <ProtectedRoute>
                     <Layout>
                       <Messages />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/chat" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Chat />
                     </Layout>
                   </ProtectedRoute>
                 } />
