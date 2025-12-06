@@ -77,7 +77,7 @@ const ChatBot = () => {
 
   const handleOpen = () => {
     setIsOpen(true);
-    if (!chatServiceRef.current?.chatSession) {
+    if (!chatServiceRef.current?.isInitialized) {
       initializeChat();
     }
   };
@@ -88,7 +88,9 @@ const ChatBot = () => {
     setIsTyping(true);
 
     try {
-      const stream = await chatServiceRef.current.sendMessageStream(text);
+      // Pass current history + new text implicitly via ChatService logic or explicitly here
+      // We pass 'messages' (current history before this new one) and let ChatService append the new text
+      const stream = await chatServiceRef.current.sendMessageStream(text, messages);
       
       const botMsgId = Date.now() + 1;
       let fullText = '';
