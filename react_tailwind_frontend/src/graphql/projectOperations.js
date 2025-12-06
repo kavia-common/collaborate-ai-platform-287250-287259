@@ -44,3 +44,35 @@ export const DELETE_PROJECT = gql`
     deleteProject(id: $id)
   }
 `;
+
+export const PROJECT_CREATED = gql`
+  subscription OnProjectCreated {
+    projectCreated {
+      id
+      title
+      description
+      status
+      startDate
+      endDate
+    }
+  }
+`;
+
+export const PROJECT_UPDATED = gql`
+  subscription OnProjectUpdated {
+    projectUpdated {
+      id
+      title
+      description
+      status
+      startDate
+      endDate
+    }
+  }
+`;
+
+export const PROJECT_DELETED = gql`
+  subscription OnProjectDeleted {
+    projectDeleted
+  }
+`;

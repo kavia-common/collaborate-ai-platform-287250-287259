@@ -1,131 +1,199 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation } from '@apollo/client';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useQuery } from '@apollo/client';
+import { GET_PROJECTS, PROJECT_CREATED, PROJECT_UPDATED, PROJECT_DELETED } from '../graphql/projectOperations';
+import { GET_EVENTS, EVENT_CREATED, EVENT_UPDATED, EVENT_DELETED } from '../graphql/eventOperations';
 import { ME_QUERY } from '../graphql/authOperations';
-import { GET_MY_COMPANY, CREATE_COMPANY } from '../graphql/companyOperations';
+import KPICard from '../components/dashboard/KPICard';
+import ProjectsByStatusChart from '../components/dashboard/ProjectsByStatusChart';
+import EventsOverTimeChart from '../components/dashboard/EventsOverTimeChart';
+import DashboardTable from '../components/dashboard/DashboardTable';
 
 const Dashboard = () => {
-  const { data: meData, loading: meLoading } = useQuery(ME_QUERY);
-  const { data: companyData, loading: companyLoading, refetch: refetchCompany } = useQuery(GET_MY_COMPANY);
+  // 1. Fetch Data
+  const { data: meData } = useQuery(ME_QUERY);
   
-  const [createCompany] = useMutation(CREATE_COMPANY, {
-    onCompleted: () => refetchCompany()
-  });
+  const { 
+    data: projectsData, 
+    loading: projectsLoading, 
+    subscribeToMore: subscribeToProjects 
+  } = useQuery(GET_PROJECTS);
 
-  const [newCompany, setNewCompany] = useState({ name: '', description: '', industry: '' });
-  const [showCompanyForm, setShowCompanyForm] = useState(false);
+  const { 
+    data: eventsData, 
+    loading: eventsLoading, 
+    subscribeToMore: subscribeToEvents 
+  } = useQuery(GET_EVENTS);
 
-  const handleCreateCompany = (e) => {
-    e.preventDefault();
-    createCompany({ variables: newCompany });
-    setShowCompanyForm(false);
-  };
+  // 2. Real-time Subscriptions
+  useEffect(() => {
+    // Project Subscriptions
+    const unsubProjectCreated = subscribeToProjects({
+      document: PROJECT_CREATED,
+      updateQuery: (prev, { subscriptionData }) => {
+        if (!subscriptionData.data) return prev;
+        const newProject = subscriptionData.data.projectCreated;
+        // Check duplication
+        if (prev.getProjects.find(p => p.id === newProject.id)) return prev;
+        return Object.assign({}, prev, {
+          getProjects: [...prev.getProjects, newProject]
+        });
+      }
+    });
 
-  if (meLoading || companyLoading) return (
-    <div className="flex justify-center items-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-    </div>
-  );
+    const unsubProjectUpdated = subscribeToProjects({
+      document: PROJECT_UPDATED,
+      updateQuery: (prev, { subscriptionData }) => {
+          if (!subscriptionData.data) return prev;
+          const updatedProject = subscriptionData.data.projectUpdated;
+          return Object.assign({}, prev, {
+              getProjects: prev.getProjects.map(p => 
+                  p.id === updatedProject.id ? updatedProject : p
+              )
+          });
+      }
+    });
+
+    const unsubProjectDeleted = subscribeToProjects({
+      document: PROJECT_DELETED,
+      updateQuery: (prev, { subscriptionData }) => {
+          if (!subscriptionData.data) return prev;
+          const deletedId = subscriptionData.data.projectDeleted;
+          return Object.assign({}, prev, {
+              getProjects: prev.getProjects.filter(p => p.id !== deletedId)
+          });
+      }
+    });
+
+    return () => {
+        // Cleanup handled by Apollo mostly, but good practice to be aware
+    };
+  }, [subscribeToProjects]);
+
+  useEffect(() => {
+      // Event Subscriptions
+      const unsubEventCreated = subscribeToEvents({
+        document: EVENT_CREATED,
+        updateQuery: (prev, { subscriptionData }) => {
+          if (!subscriptionData.data) return prev;
+          const newEvent = subscriptionData.data.eventCreated;
+          if (prev.getEvents.find(e => e.id === newEvent.id)) return prev;
+          return Object.assign({}, prev, {
+            getEvents: [...prev.getEvents, newEvent]
+          });
+        }
+      });
+
+      const unsubEventUpdated = subscribeToEvents({
+        document: EVENT_UPDATED,
+        updateQuery: (prev, { subscriptionData }) => {
+            if (!subscriptionData.data) return prev;
+            const updatedEvent = subscriptionData.data.eventUpdated;
+            return Object.assign({}, prev, {
+                getEvents: prev.getEvents.map(e => 
+                    e.id === updatedEvent.id ? updatedEvent : e
+                )
+            });
+        }
+      });
+
+      const unsubEventDeleted = subscribeToEvents({
+        document: EVENT_DELETED,
+        updateQuery: (prev, { subscriptionData }) => {
+            if (!subscriptionData.data) return prev;
+            const deletedId = subscriptionData.data.eventDeleted;
+            return Object.assign({}, prev, {
+                getEvents: prev.getEvents.filter(e => e.id !== deletedId)
+            });
+        }
+      });
+  }, [subscribeToEvents]);
+
+
+  // 3. Calculate Stats
+  const projects = projectsData?.getProjects || [];
+  const events = eventsData?.getEvents || [];
+
+  const totalProjects = projects.length;
+  const activeProjects = projects.filter(p => 
+      p.status?.toLowerCase() === 'active' || p.status?.toLowerCase() === 'in_progress'
+  ).length;
+  
+  const totalEvents = events.length;
+  const upcomingEvents = events.filter(e => new Date(e.startTime) > new Date()).length;
+
+
+  if (projectsLoading || eventsLoading) {
+      return (
+        <div className="flex justify-center items-center h-full min-h-[400px]">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+        </div>
+      );
+  }
 
   return (
-    <>
-        <header className="flex justify-between items-center mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-text">Dashboard Overview</h2>
-            <p className="text-text-secondary text-sm mt-1">Welcome back, <span className="font-semibold text-primary">{meData?.me?.username}</span></p>
-          </div>
-        </header>
-
-        {/* Company Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Company Profile</h3>
-          
-          {companyData?.myCompany ? (
-            <div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Company Name</p>
-                  <p className="text-lg font-medium">{companyData.myCompany.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Industry</p>
-                  <p className="text-lg font-medium">{companyData.myCompany.industry || 'Not specified'}</p>
-                </div>
-                <div className="col-span-1 md:col-span-2">
-                  <p className="text-sm text-gray-500">Description</p>
-                  <p className="text-gray-700">{companyData.myCompany.description || 'No description provided.'}</p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <p className="text-gray-600 mb-4">You are not associated with a company yet.</p>
-              {!showCompanyForm ? (
-                <button 
-                  onClick={() => setShowCompanyForm(true)}
-                  className="bg-primary text-white px-4 py-2 rounded hover:bg-primary-700 transition"
-                >
-                  Create Company
-                </button>
-              ) : (
-                <form onSubmit={handleCreateCompany} className="max-w-lg space-y-4 bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-700">Register New Company</h4>
-                  <input
-                    type="text"
-                    placeholder="Company Name"
-                    className="w-full border p-2 rounded"
-                    value={newCompany.name}
-                    onChange={e => setNewCompany({...newCompany, name: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Industry"
-                    className="w-full border p-2 rounded"
-                    value={newCompany.industry}
-                    onChange={e => setNewCompany({...newCompany, industry: e.target.value})}
-                  />
-                  <textarea
-                    placeholder="Description"
-                    className="w-full border p-2 rounded"
-                    value={newCompany.description}
-                    onChange={e => setNewCompany({...newCompany, description: e.target.value})}
-                  />
-                  <div className="flex gap-2">
-                    <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Save</button>
-                    <button type="button" onClick={() => setShowCompanyForm(false)} className="bg-gray-300 text-gray-700 px-4 py-2 rounded">Cancel</button>
-                  </div>
-                </form>
-              )}
-            </div>
-          )}
+    <div className="space-y-8 animate-fade-in">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
+          <p className="text-gray-500 mt-1">
+             Welcome back, <span className="font-semibold text-primary">{meData?.me?.username || 'User'}</span>! 
+             Here's what's happening today.
+          </p>
         </div>
-
-        {/* Quick Stats / Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Link to="/projects" className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-primary/30 transition group">
-            <div className="bg-blue-50 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-               <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
-            </div>
-            <h4 className="text-text font-semibold mb-1 group-hover:text-primary transition-colors">Projects</h4>
-            <p className="text-sm text-text-secondary">Manage ongoing work</p>
-          </Link>
-          <Link to="/events" className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-secondary/30 transition group">
-            <div className="bg-amber-50 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <svg className="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-            </div>
-            <h4 className="text-text font-semibold mb-1 group-hover:text-secondary transition-colors">Events</h4>
-            <p className="text-sm text-text-secondary">Upcoming schedules</p>
-          </Link>
-          <Link to="/messages" className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-green-500/30 transition group">
-            <div className="bg-green-50 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-            </div>
-            <h4 className="text-text font-semibold mb-1 group-hover:text-green-600 transition-colors">Messages</h4>
-            <p className="text-sm text-text-secondary">Team communication</p>
-          </Link>
+        <div className="text-sm text-gray-400">
+            {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
-    </>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <KPICard 
+            title="Total Projects" 
+            value={totalProjects} 
+            icon={
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+            }
+            color="blue"
+        />
+        <KPICard 
+            title="Active Projects" 
+            value={activeProjects} 
+            icon={
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            }
+            color="amber"
+        />
+        <KPICard 
+            title="Total Events" 
+            value={totalEvents} 
+            icon={
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            }
+            color="purple"
+        />
+        <KPICard 
+            title="Upcoming Events" 
+            value={upcomingEvents} 
+            icon={
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            }
+            color="green"
+        />
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+         <EventsOverTimeChart events={events} />
+         <ProjectsByStatusChart projects={projects} />
+      </div>
+
+      {/* Unified Table */}
+      <div className="w-full">
+         <DashboardTable projects={projects} events={events} />
+      </div>
+
+    </div>
   );
 };
 

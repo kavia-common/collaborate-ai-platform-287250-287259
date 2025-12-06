@@ -15,8 +15,8 @@ const Login = () => {
   const location = useLocation();
   const { login: authLogin } = useAuth();
   
-  // Get redirect path from location state or default to home
-  const from = location.state?.from?.pathname || '/';
+  // Get redirect path from location state or default to dashboard
+  const from = location.state?.from?.pathname || '/dashboard';
 
   const [login, { loading }] = useMutation(LOGIN_MUTATION, {
     onCompleted: (data) => {

@@ -73,3 +73,47 @@ export const DELETE_EVENT = gql`
     deleteEvent(id: $id)
   }
 `;
+
+export const EVENT_CREATED = gql`
+  subscription OnEventCreated {
+    eventCreated {
+      id
+      title
+      description
+      startTime
+      endTime
+      location
+      isVirtual
+      meetingUrl
+      organizer {
+        id
+        username
+      }
+    }
+  }
+`;
+
+export const EVENT_UPDATED = gql`
+  subscription OnEventUpdated {
+    eventUpdated {
+      id
+      title
+      description
+      startTime
+      endTime
+      location
+      isVirtual
+      meetingUrl
+      organizer {
+        id
+        username
+      }
+    }
+  }
+`;
+
+export const EVENT_DELETED = gql`
+  subscription OnEventDeleted {
+    eventDeleted
+  }
+`;
