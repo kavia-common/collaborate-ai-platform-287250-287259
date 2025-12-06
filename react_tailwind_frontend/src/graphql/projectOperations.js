@@ -2,9 +2,9 @@ import { gql } from '@apollo/client';
 
 export const GET_PROJECTS = gql`
   query GetProjects {
-    projects {
+    projects: getProjects {
       id
-      name
+      title
       description
       status
       startDate
@@ -14,10 +14,10 @@ export const GET_PROJECTS = gql`
 `;
 
 export const CREATE_PROJECT = gql`
-  mutation CreateProject($name: String!, $description: String, $status: String, $startDate: String, $endDate: String) {
-    createProject(name: $name, description: $description, status: $status, startDate: $startDate, endDate: $endDate) {
+  mutation CreateProject($input: CreateProjectInput!) {
+    createProject(input: $input) {
       id
-      name
+      title
       description
       status
       startDate
@@ -27,10 +27,10 @@ export const CREATE_PROJECT = gql`
 `;
 
 export const UPDATE_PROJECT = gql`
-  mutation UpdateProject($id: ID!, $name: String, $description: String, $status: String, $startDate: String, $endDate: String) {
-    updateProject(id: $id, name: $name, description: $description, status: $status, startDate: $startDate, endDate: $endDate) {
+  mutation UpdateProject($input: UpdateProjectInput!) {
+    updateProject(input: $input) {
       id
-      name
+      title
       description
       status
       startDate

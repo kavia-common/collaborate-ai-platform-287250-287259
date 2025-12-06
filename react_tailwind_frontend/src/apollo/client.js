@@ -1,4 +1,5 @@
-import { ApolloClient, InMemoryCache, split, HttpLink } from '@apollo/client';
+import { ApolloClient, InMemoryCache, split, HttpLink, from } from '@apollo/client';
+import { onError } from '@apollo/client/link/error';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { createClient } from 'graphql-ws';
 import { getMainDefinition } from '@apollo/client/utilities';
@@ -56,8 +57,18 @@ const splitLink = split(
   authLink.concat(httpLink),
 );
 
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+  if (graphQLErrors)
+    graphQLErrors.forEach(({ message, locations, path }) =>
+      console.log(
+        `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
+      )
+    );
+  if (networkError) console.log(`[Network error]: ${networkError}`);
+});
+
 const client = new ApolloClient({
-  link: splitLink,
+  link: from([errorLink, splitLink]),
   cache: new InMemoryCache(),
 });
 

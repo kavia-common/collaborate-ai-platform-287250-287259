@@ -37,7 +37,7 @@ const Projects = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProject, setCurrentProject] = useState(null); // If null, we are creating
   const [formData, setFormData] = useState({
-    name: '',
+    title: '',
     description: '',
     status: 'PLANNING',
     startDate: '',
@@ -61,7 +61,7 @@ const Projects = () => {
   const openCreateModal = () => {
     setCurrentProject(null);
     setFormData({
-      name: '',
+      title: '',
       description: '',
       status: 'PLANNING',
       startDate: '',
@@ -71,14 +71,24 @@ const Projects = () => {
     setIsModalOpen(true);
   };
 
+  // Helper to safely parse date from string or number
+  const safeDate = (val) => {
+    if (!val) return null;
+    const d = isNaN(Number(val)) ? new Date(val) : new Date(Number(val));
+    return isNaN(d.getTime()) ? null : d;
+  };
+
   const openEditModal = (project) => {
     setCurrentProject(project);
+    const start = safeDate(project.startDate);
+    const end = safeDate(project.endDate);
+
     setFormData({
-      name: project.name,
+      title: project.title,
       description: project.description || '',
       status: project.status,
-      startDate: project.startDate ? new Date(parseInt(project.startDate)).toISOString().split('T')[0] : '',
-      endDate: project.endDate ? new Date(parseInt(project.endDate)).toISOString().split('T')[0] : ''
+      startDate: start ? start.toISOString().split('T')[0] : '',
+      endDate: end ? end.toISOString().split('T')[0] : ''
     });
     setFormErrors({});
     setIsModalOpen(true);
@@ -91,7 +101,7 @@ const Projects = () => {
 
   const validateForm = () => {
     const errors = {};
-    if (!formData.name.trim()) errors.name = 'Project name is required';
+    if (!formData.title.trim()) errors.title = 'Project title is required';
     if (formData.startDate && formData.endDate) {
       if (new Date(formData.endDate) < new Date(formData.startDate)) {
         errors.endDate = 'End date cannot be before start date';
@@ -105,7 +115,7 @@ const Projects = () => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    const variables = {
+    const inputData = {
       ...formData,
       // Ensure dates are strings or null if empty
       startDate: formData.startDate || null,
@@ -113,9 +123,20 @@ const Projects = () => {
     };
 
     if (currentProject) {
-      updateProject({ variables: { id: currentProject.id, ...variables } });
+      updateProject({ 
+        variables: { 
+          input: {
+            id: currentProject.id, 
+            ...inputData
+          }
+        } 
+      });
     } else {
-      createProject({ variables });
+      createProject({ 
+        variables: { 
+          input: inputData 
+        } 
+      });
     }
   };
 
@@ -127,9 +148,8 @@ const Projects = () => {
 
   // Helper to format timestamps or date strings
   const formatDate = (dateVal) => {
-    if (!dateVal) return '-';
-    // Handle if dateVal is a timestamp string or ISO string
-    const date = isNaN(dateVal) ? new Date(dateVal) : new Date(parseInt(dateVal));
+    const date = safeDate(dateVal);
+    if (!date) return '-';
     return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
@@ -225,7 +245,7 @@ const Projects = () => {
                     </div>
                   </div>
                   
-                  <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1" title={project.name}>{project.name}</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1" title={project.title}>{project.title}</h3>
                   <p className="text-gray-500 text-sm mb-4 line-clamp-3 h-14">
                     {project.description || 'No description provided.'}
                   </p>
@@ -288,15 +308,15 @@ const Projects = () => {
               
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Project Name <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Project Title <span className="text-red-500">*</span></label>
                   <input
                     type="text"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all ${formErrors.name ? 'border-red-500' : 'border-gray-200'}`}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all ${formErrors.title ? 'border-red-500' : 'border-gray-200'}`}
                     placeholder="e.g. Website Redesign"
-                    value={formData.name}
-                    onChange={e => setFormData({...formData, name: e.target.value})}
+                    value={formData.title}
+                    onChange={e => setFormData({...formData, title: e.target.value})}
                   />
-                  {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
+                  {formErrors.title && <p className="text-red-500 text-xs mt-1">{formErrors.title}</p>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
