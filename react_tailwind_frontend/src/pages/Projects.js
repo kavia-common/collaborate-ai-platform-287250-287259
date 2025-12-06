@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
-import { Link } from 'react-router-dom';
 import { GET_PROJECTS, CREATE_PROJECT, DELETE_PROJECT } from '../graphql/projectOperations';
 
 const Projects = () => {
@@ -24,31 +23,35 @@ const Projects = () => {
     }
   };
 
-  if (loading) return <div className="p-8">Loading projects...</div>;
-  if (error) return <div className="p-8 text-red-600">Error loading projects: {error.message}</div>;
+  if (loading) return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>
+  );
+  if (error) return <div className="p-8 text-red-600 bg-red-50 rounded-lg">Error loading projects: {error.message}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
-       <aside className="w-64 bg-white shadow-md flex-shrink-0 hidden md:block">
-        <div className="p-6 border-b">
-           <Link to="/dashboard" className="text-xl font-bold text-blue-600">Collaborate AI</Link>
-        </div>
-        <nav className="p-4 space-y-2">
-          <Link to="/dashboard" className="block px-4 py-2 rounded text-gray-600 hover:bg-gray-50">Dashboard</Link>
-          <Link to="/projects" className="block px-4 py-2 rounded bg-blue-50 text-blue-700 font-medium">Projects</Link>
-          <Link to="/events" className="block px-4 py-2 rounded text-gray-600 hover:bg-gray-50">Events</Link>
-          <Link to="/messages" className="block px-4 py-2 rounded text-gray-600 hover:bg-gray-50">Messages</Link>
-        </nav>
-      </aside>
-
-      <main className="flex-1 p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Projects</h1>
+    <>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-text">Projects</h1>
+            <p className="text-text-secondary text-sm">Manage and track your company projects</p>
+          </div>
           <button 
             onClick={() => setIsFormOpen(!isFormOpen)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            className="bg-primary text-white px-5 py-2.5 rounded-lg hover:bg-primary-700 transition shadow-sm hover:shadow-md flex items-center gap-2"
           >
-            {isFormOpen ? 'Close Form' : 'New Project'}
+            {isFormOpen ? (
+                <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    Close
+                </>
+            ) : (
+                <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                    New Project
+                </>
+            )}
           </button>
         </div>
 
@@ -88,23 +91,23 @@ const Projects = () => {
         <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
           {data.projects && data.projects.length > 0 ? (
             data.projects.map(project => (
-              <div key={project.id} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-semibold text-gray-800">{project.name}</h3>
-                  <span className={`px-2 py-1 text-xs rounded-full ${
+              <div key={project.id} className="bg-surface p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="text-lg font-bold text-text">{project.name}</h3>
+                  <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
                     project.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
                     project.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
                   }`}>
-                    {project.status}
+                    {project.status.replace('_', ' ')}
                   </span>
                 </div>
-                <p className="text-gray-600 mb-4 line-clamp-2">{project.description || 'No description'}</p>
-                <div className="flex justify-end gap-2">
+                <p className="text-text-secondary mb-4 text-sm line-clamp-2 h-10">{project.description || 'No description provided.'}</p>
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-50">
                    {/* Placeholder for Edit */}
-                   <button className="text-blue-600 text-sm hover:underline" onClick={() => alert('Edit feature coming soon')}>Edit</button>
+                   <button className="text-primary hover:text-primary-700 text-sm font-medium transition-colors" onClick={() => alert('Edit feature coming soon')}>Edit</button>
                    <button 
                     onClick={() => handleDelete(project.id)}
-                    className="text-red-600 text-sm hover:underline"
+                    className="text-red-500 hover:text-red-700 text-sm font-medium transition-colors"
                    >
                      Delete
                    </button>
@@ -112,11 +115,16 @@ const Projects = () => {
               </div>
             ))
           ) : (
-            <p className="text-gray-500 col-span-2 text-center py-10">No projects found. Create one to get started.</p>
+            <div className="col-span-full py-16 text-center bg-white rounded-xl border border-dashed border-gray-200">
+                <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                </svg>
+                <h3 className="mt-2 text-sm font-medium text-text">No projects</h3>
+                <p className="mt-1 text-sm text-text-secondary">Get started by creating a new project.</p>
+            </div>
           )}
         </div>
-      </main>
-    </div>
+    </>
   );
 };
 

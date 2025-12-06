@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
-import { Link } from 'react-router-dom';
 import { GET_EVENTS, CREATE_EVENT, DELETE_EVENT } from '../graphql/eventOperations';
 
 const Events = () => {
@@ -24,29 +23,23 @@ const Events = () => {
     }
   };
 
-  if (loading) return <div className="p-8">Loading events...</div>;
-  if (error) return <div className="p-8 text-red-600">Error loading events: {error.message}</div>;
+  if (loading) return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>
+  );
+  if (error) return <div className="p-8 text-red-600 bg-red-50 rounded-lg">Error loading events: {error.message}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
-       <aside className="w-64 bg-white shadow-md flex-shrink-0 hidden md:block">
-        <div className="p-6 border-b">
-           <Link to="/dashboard" className="text-xl font-bold text-blue-600">Collaborate AI</Link>
-        </div>
-        <nav className="p-4 space-y-2">
-          <Link to="/dashboard" className="block px-4 py-2 rounded text-gray-600 hover:bg-gray-50">Dashboard</Link>
-          <Link to="/projects" className="block px-4 py-2 rounded text-gray-600 hover:bg-gray-50">Projects</Link>
-          <Link to="/events" className="block px-4 py-2 rounded bg-blue-50 text-blue-700 font-medium">Events</Link>
-          <Link to="/messages" className="block px-4 py-2 rounded text-gray-600 hover:bg-gray-50">Messages</Link>
-        </nav>
-      </aside>
-
-      <main className="flex-1 p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Events</h1>
+    <>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-text">Events</h1>
+            <p className="text-text-secondary text-sm">Schedule and manage company events</p>
+          </div>
           <button 
             onClick={() => setIsFormOpen(!isFormOpen)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            className="bg-primary text-white px-5 py-2.5 rounded-lg hover:bg-primary-700 transition shadow-sm hover:shadow-md flex items-center gap-2"
           >
             {isFormOpen ? 'Close Form' : 'New Event'}
           </button>
@@ -104,18 +97,31 @@ const Events = () => {
         <div className="space-y-4">
           {data.events && data.events.length > 0 ? (
             data.events.map(event => (
-              <div key={event.id} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <h3 className="text-lg font-semibold text-gray-800">{event.title}</h3>
-                    <span className="text-xs font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-600">{event.type}</span>
+              <div key={event.id} className="bg-surface p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-lg font-bold text-text">{event.title}</h3>
+                    <span className="text-xs font-bold px-2 py-1 rounded bg-secondary/10 text-secondary tracking-wide uppercase">{event.type}</span>
                   </div>
-                  <p className="text-gray-500 text-sm mb-2">{new Date(parseInt(event.date)).toLocaleString()} • {event.location || 'Online'}</p>
-                  <p className="text-gray-600">{event.description}</p>
+                  <div className="flex items-center gap-4 text-sm text-text-secondary mb-3">
+                    <span className="flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        {new Date(parseInt(event.date)).toLocaleDateString()}
+                    </span>
+                    <span className="flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        {new Date(parseInt(event.date)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </span>
+                    <span className="flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        {event.location || 'Online'}
+                    </span>
+                  </div>
+                  <p className="text-text-secondary">{event.description}</p>
                 </div>
                 <button 
                   onClick={() => handleDelete(event.id)}
-                  className="text-red-500 hover:text-red-700 ml-4 p-2"
+                  className="text-red-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-colors"
                   title="Delete Event"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -125,11 +131,16 @@ const Events = () => {
               </div>
             ))
           ) : (
-            <p className="text-gray-500 text-center py-10">No upcoming events.</p>
+             <div className="py-16 text-center bg-white rounded-xl border border-dashed border-gray-200">
+                <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <h3 className="mt-2 text-sm font-medium text-text">No events</h3>
+                <p className="mt-1 text-sm text-text-secondary">Get started by scheduling a new event.</p>
+            </div>
           )}
         </div>
-      </main>
-    </div>
+    </>
   );
 };
 

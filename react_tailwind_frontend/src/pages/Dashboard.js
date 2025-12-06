@@ -21,29 +21,18 @@ const Dashboard = () => {
     setShowCompanyForm(false);
   };
 
-  if (meLoading || companyLoading) return <div className="p-8 text-center">Loading dashboard...</div>;
+  if (meLoading || companyLoading) return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-md flex-shrink-0 hidden md:block">
-        <div className="p-6 border-b">
-          <h1 className="text-xl font-bold text-blue-600">Collaborate AI</h1>
-        </div>
-        <nav className="p-4 space-y-2">
-          <Link to="/dashboard" className="block px-4 py-2 rounded bg-blue-50 text-blue-700 font-medium">Dashboard</Link>
-          <Link to="/projects" className="block px-4 py-2 rounded text-gray-600 hover:bg-gray-50">Projects</Link>
-          <Link to="/events" className="block px-4 py-2 rounded text-gray-600 hover:bg-gray-50">Events</Link>
-          <Link to="/messages" className="block px-4 py-2 rounded text-gray-600 hover:bg-gray-50">Messages</Link>
-        </nav>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 p-8">
+    <>
         <header className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
-          <div className="text-gray-600">
-            Welcome, <span className="font-semibold">{meData?.me?.username}</span>
+          <div>
+            <h2 className="text-2xl font-bold text-text">Dashboard Overview</h2>
+            <p className="text-text-secondary text-sm mt-1">Welcome back, <span className="font-semibold text-primary">{meData?.me?.username}</span></p>
           </div>
         </header>
 
@@ -74,7 +63,7 @@ const Dashboard = () => {
               {!showCompanyForm ? (
                 <button 
                   onClick={() => setShowCompanyForm(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                  className="bg-primary text-white px-4 py-2 rounded hover:bg-primary-700 transition"
                 >
                   Create Company
                 </button>
@@ -114,21 +103,29 @@ const Dashboard = () => {
 
         {/* Quick Stats / Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Link to="/projects" className="bg-blue-50 p-6 rounded-xl border border-blue-100 hover:shadow-md transition">
-            <h4 className="text-blue-800 font-semibold mb-2">Projects</h4>
-            <p className="text-sm text-blue-600">Manage ongoing work</p>
+          <Link to="/projects" className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-primary/30 transition group">
+            <div className="bg-blue-50 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+               <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+            </div>
+            <h4 className="text-text font-semibold mb-1 group-hover:text-primary transition-colors">Projects</h4>
+            <p className="text-sm text-text-secondary">Manage ongoing work</p>
           </Link>
-          <Link to="/events" className="bg-purple-50 p-6 rounded-xl border border-purple-100 hover:shadow-md transition">
-            <h4 className="text-purple-800 font-semibold mb-2">Events</h4>
-            <p className="text-sm text-purple-600">Upcoming schedules</p>
+          <Link to="/events" className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-secondary/30 transition group">
+            <div className="bg-amber-50 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg className="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            </div>
+            <h4 className="text-text font-semibold mb-1 group-hover:text-secondary transition-colors">Events</h4>
+            <p className="text-sm text-text-secondary">Upcoming schedules</p>
           </Link>
-          <Link to="/messages" className="bg-green-50 p-6 rounded-xl border border-green-100 hover:shadow-md transition">
-            <h4 className="text-green-800 font-semibold mb-2">Messages</h4>
-            <p className="text-sm text-green-600">Team communication</p>
+          <Link to="/messages" className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-green-500/30 transition group">
+            <div className="bg-green-50 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+            </div>
+            <h4 className="text-text font-semibold mb-1 group-hover:text-green-600 transition-colors">Messages</h4>
+            <p className="text-sm text-text-secondary">Team communication</p>
           </Link>
         </div>
-      </main>
-    </div>
+    </>
   );
 };
 

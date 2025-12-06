@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
-import { Link } from 'react-router-dom';
 import { GET_MESSAGES, SEND_MESSAGE } from '../graphql/messageOperations';
 import { useAuth } from '../context/AuthContext';
 
@@ -21,29 +20,23 @@ const Messages = () => {
     setMessageContent('');
   };
 
-  if (loading) return <div className="p-8">Loading messages...</div>;
-  if (error) return <div className="p-8 text-red-600">Error loading messages: {error.message}</div>;
+  if (loading) return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>
+  );
+  if (error) return <div className="p-8 text-red-600 bg-red-50 rounded-lg">Error loading messages: {error.message}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
-       <aside className="w-64 bg-white shadow-md flex-shrink-0 hidden md:block">
-        <div className="p-6 border-b">
-           <Link to="/dashboard" className="text-xl font-bold text-blue-600">Collaborate AI</Link>
+    <div className="flex flex-col h-[calc(100vh-8rem)]">
+        <div className="mb-4">
+            <h1 className="text-2xl font-bold text-text">Team Chat</h1>
+            <p className="text-text-secondary text-sm">Real-time collaboration</p>
         </div>
-        <nav className="p-4 space-y-2">
-          <Link to="/dashboard" className="block px-4 py-2 rounded text-gray-600 hover:bg-gray-50">Dashboard</Link>
-          <Link to="/projects" className="block px-4 py-2 rounded text-gray-600 hover:bg-gray-50">Projects</Link>
-          <Link to="/events" className="block px-4 py-2 rounded text-gray-600 hover:bg-gray-50">Events</Link>
-          <Link to="/messages" className="block px-4 py-2 rounded bg-blue-50 text-blue-700 font-medium">Messages</Link>
-        </nav>
-      </aside>
-
-      <main className="flex-1 p-8 flex flex-col h-screen max-h-screen">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Team Chat</h1>
         
-        <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+        <div className="flex-1 bg-surface rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
           {/* Message List */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50">
             {data.messages && data.messages.length > 0 ? (
                 // Sort messages by creation time
                 [...data.messages]
@@ -52,12 +45,12 @@ const Messages = () => {
                     const isMe = msg.sender.id === user?.id || msg.sender.email === user?.email;
                     return (
                         <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-lg ${
-                                isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                            <div className={`max-w-xs md:max-w-md lg:max-w-lg px-5 py-3 rounded-2xl shadow-sm ${
+                                isMe ? 'bg-primary text-white rounded-br-none' : 'bg-white text-text rounded-bl-none border border-gray-100'
                             }`}>
-                                {!isMe && <div className="text-xs font-bold text-gray-600 mb-1">{msg.sender.username}</div>}
-                                <p>{msg.content}</p>
-                                <div className={`text-xs mt-1 ${isMe ? 'text-blue-200' : 'text-gray-400'}`}>
+                                {!isMe && <div className="text-xs font-bold text-primary mb-1">{msg.sender.username}</div>}
+                                <p className="leading-relaxed">{msg.content}</p>
+                                <div className={`text-[10px] mt-2 text-right ${isMe ? 'text-blue-100' : 'text-gray-400'}`}>
                                     {new Date(parseInt(msg.createdAt)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                 </div>
                             </div>
@@ -65,18 +58,19 @@ const Messages = () => {
                     );
                 })
             ) : (
-                <div className="h-full flex items-center justify-center text-gray-400">
-                    No messages yet. Start the conversation!
+                <div className="h-full flex flex-col items-center justify-center text-text-light">
+                    <svg className="w-16 h-16 mb-4 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                    <p>No messages yet. Start the conversation!</p>
                 </div>
             )}
           </div>
 
           {/* Input Area */}
-          <div className="p-4 bg-gray-50 border-t border-gray-200">
-            <form onSubmit={handleSend} className="flex gap-2">
+          <div className="p-4 bg-white border-t border-gray-100">
+            <form onSubmit={handleSend} className="flex gap-3">
                 <input
                     type="text"
-                    className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                    className="flex-1 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                     placeholder="Type a message..."
                     value={messageContent}
                     onChange={(e) => setMessageContent(e.target.value)}
@@ -84,14 +78,16 @@ const Messages = () => {
                 <button 
                     type="submit" 
                     disabled={!messageContent.trim()}
-                    className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-primary text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
                 >
-                    Send
+                    <span className="hidden md:inline">Send Message</span>
+                    <span className="md:hidden">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                    </span>
                 </button>
             </form>
           </div>
         </div>
-      </main>
     </div>
   );
 };

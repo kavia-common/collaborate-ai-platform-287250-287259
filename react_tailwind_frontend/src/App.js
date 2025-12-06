@@ -11,6 +11,7 @@ import Projects from './pages/Projects';
 import Events from './pages/Events';
 import Messages from './pages/Messages';
 import ProtectedRoute from './components/ProtectedRoute';
+import Layout from './components/Layout';
 import './App.css';
 
 // PUBLIC_INTERFACE
@@ -24,10 +25,36 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-                <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-                <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+                
+                {/* Protected Routes wrapped in Layout */}
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Dashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/projects" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Projects />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/events" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Events />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/messages" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Messages />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
               </Routes>
             </div>
         </Router>
