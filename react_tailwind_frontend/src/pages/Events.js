@@ -44,7 +44,8 @@ const Events = () => {
     startTime: '',
     endTime: '',
     location: '',
-    isVirtual: false
+    isVirtual: false,
+    meetingUrl: ''
   });
   const [formErrors, setFormErrors] = useState({});
   const [toast, setToast] = useState(null);
@@ -79,7 +80,8 @@ const Events = () => {
       startTime: '',
       endTime: '',
       location: '',
-      isVirtual: false
+      isVirtual: false,
+      meetingUrl: ''
     });
     setFormErrors({});
     setIsModalOpen(true);
@@ -93,7 +95,8 @@ const Events = () => {
       startTime: toLocalISOString(event.startTime),
       endTime: toLocalISOString(event.endTime),
       location: event.location || '',
-      isVirtual: event.isVirtual || false
+      isVirtual: event.isVirtual || false,
+      meetingUrl: event.meetingUrl || ''
     });
     setFormErrors({});
     setIsModalOpen(true);
@@ -116,6 +119,14 @@ const Events = () => {
       }
     }
 
+    if (formData.meetingUrl) {
+      try {
+        new URL(formData.meetingUrl);
+      } catch (_) {
+        errors.meetingUrl = 'Please enter a valid URL (e.g., https://...)';
+      }
+    }
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -131,7 +142,8 @@ const Events = () => {
       startTime: new Date(formData.startTime).toISOString(),
       endTime: new Date(formData.endTime).toISOString(),
       location: formData.location,
-      isVirtual: formData.isVirtual
+      isVirtual: formData.isVirtual,
+      meetingUrl: formData.meetingUrl
     };
 
     if (currentEvent) {
@@ -276,9 +288,24 @@ const Events = () => {
                 </div>
                 
                 {event.isVirtual && (
-                   <div className="px-6 py-3 bg-blue-50/50 border-t border-blue-100 rounded-b-xl flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                      <span className="text-xs font-medium text-blue-700">Virtual Event</span>
+                   <div className="px-6 py-3 bg-blue-50/50 border-t border-blue-100 rounded-b-xl flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                        <span className="text-xs font-medium text-blue-700">Virtual Event</span>
+                      </div>
+                      
+                      {/* Join Meeting Button logic: use meetingUrl if available, or fallback to location if it looks like a URL */}
+                      {(event.meetingUrl || (event.location && event.location.match(/^https?:\/\//))) && (
+                        <a 
+                          href={event.meetingUrl || event.location} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-xs bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary-700 transition-colors font-medium flex items-center gap-1 shadow-sm hover:shadow"
+                        >
+                          Join Meeting
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                        </a>
+                      )}
                    </div>
                 )}
               </div>
@@ -372,16 +399,37 @@ const Events = () => {
                       <label htmlFor="isVirtual" className="text-sm font-medium text-gray-700 select-none">This is a virtual event</label>
                    </div>
                    
-                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {formData.isVirtual ? 'Meeting Link / Details' : 'Location'}
-                   </label>
-                   <input
-                    type="text"
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                    placeholder={formData.isVirtual ? "e.g. https://zoom.us/j/..." : "e.g. Conference Room A"}
-                    value={formData.location}
-                    onChange={e => setFormData({...formData, location: e.target.value})}
-                  />
+                   <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Location
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                          placeholder={formData.isVirtual ? "e.g. Online / Zoom" : "e.g. Conference Room A"}
+                          value={formData.location}
+                          onChange={e => setFormData({...formData, location: e.target.value})}
+                        />
+                      </div>
+
+                      {formData.isVirtual && (
+                        <div className="animate-fade-in">
+                           <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Meeting URL <span className="text-gray-400 font-normal text-xs ml-1">(Optional)</span>
+                           </label>
+                           <input
+                            type="text"
+                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all ${formErrors.meetingUrl ? 'border-red-500' : 'border-gray-200'}`}
+                            placeholder="https://meet.example.com/xyz"
+                            value={formData.meetingUrl}
+                            onChange={e => setFormData({...formData, meetingUrl: e.target.value})}
+                          />
+                          {formErrors.meetingUrl && <p className="text-red-500 text-xs mt-1">{formErrors.meetingUrl}</p>}
+                          <p className="text-xs text-gray-500 mt-1">Enter the full URL including https://</p>
+                        </div>
+                      )}
+                   </div>
                 </div>
 
                 <div>

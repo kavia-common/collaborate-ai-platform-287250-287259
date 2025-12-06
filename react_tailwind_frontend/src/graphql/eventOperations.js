@@ -10,6 +10,7 @@ export const GET_EVENTS = gql`
       endTime
       location
       isVirtual
+      meetingUrl
       organizer {
         id
         username
@@ -28,6 +29,7 @@ export const GET_EVENT = gql`
       endTime
       location
       isVirtual
+      meetingUrl
       organizer {
         id
         username
@@ -46,6 +48,7 @@ export const CREATE_EVENT = gql`
       endTime
       location
       isVirtual
+      meetingUrl
     }
   }
 `;
@@ -60,6 +63,7 @@ export const UPDATE_EVENT = gql`
       endTime
       location
       isVirtual
+      meetingUrl
     }
   }
 `;
