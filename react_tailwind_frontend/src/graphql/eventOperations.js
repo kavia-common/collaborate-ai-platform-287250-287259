@@ -1,27 +1,65 @@
 import { gql } from '@apollo/client';
 
 export const GET_EVENTS = gql`
-  query GetEvents {
-    events {
+  query GetEvents($projectId: ID) {
+    getEvents(projectId: $projectId) {
       id
       title
       description
-      date
+      startTime
+      endTime
       location
-      type
+      isVirtual
+      organizer {
+        id
+        username
+      }
+    }
+  }
+`;
+
+export const GET_EVENT = gql`
+  query GetEvent($id: ID!) {
+    getEvent(id: $id) {
+      id
+      title
+      description
+      startTime
+      endTime
+      location
+      isVirtual
+      organizer {
+        id
+        username
+      }
     }
   }
 `;
 
 export const CREATE_EVENT = gql`
-  mutation CreateEvent($title: String!, $description: String, $date: String!, $location: String, $type: String) {
-    createEvent(title: $title, description: $description, date: $date, location: $location, type: $type) {
+  mutation CreateEvent($input: CreateEventInput!) {
+    createEvent(input: $input) {
       id
       title
       description
-      date
+      startTime
+      endTime
       location
-      type
+      isVirtual
+    }
+  }
+`;
+
+export const UPDATE_EVENT = gql`
+  mutation UpdateEvent($input: UpdateEventInput!) {
+    updateEvent(input: $input) {
+      id
+      title
+      description
+      startTime
+      endTime
+      location
+      isVirtual
     }
   }
 `;
