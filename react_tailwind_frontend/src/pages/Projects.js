@@ -220,8 +220,8 @@ const Projects = () => {
       {/* Projects Grid */}
       {!loading && !error && (
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-          {data?.projects?.length > 0 ? (
-            data.projects.map(project => (
+          {data?.getProjects?.length > 0 ? (
+            data.getProjects.map(project => (
               <div key={project.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 flex flex-col group h-full">
                 <div className="p-6 flex-1">
                   <div className="flex justify-between items-start mb-4">
