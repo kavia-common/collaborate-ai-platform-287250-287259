@@ -5,6 +5,8 @@ import client from './apollo/client';
 import { AuthProvider } from './context/AuthContext';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import Register from './pages/Register';
+import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
 // PUBLIC_INTERFACE
@@ -17,6 +19,9 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                {/* Example of how to protect future routes */}
+                {/* <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} /> */}
               </Routes>
             </div>
         </Router>
