@@ -50,12 +50,17 @@ const Home = () => {
                 <div className="p-6 bg-blue-50 rounded-lg border border-blue-100">
                   <h3 className="font-semibold text-lg text-blue-800 mb-2">Projects</h3>
                   <p className="text-gray-600 mb-4">Manage your ongoing projects and tasks.</p>
-                  <button className="text-blue-600 font-medium hover:underline">View Projects &rarr;</button>
+                  <Link to="/projects" className="text-blue-600 font-medium hover:underline">View Projects &rarr;</Link>
                 </div>
                 <div className="p-6 bg-purple-50 rounded-lg border border-purple-100">
                   <h3 className="font-semibold text-lg text-purple-800 mb-2">Events</h3>
                   <p className="text-gray-600 mb-4">Coordinate upcoming company events.</p>
-                  <button className="text-purple-600 font-medium hover:underline">View Events &rarr;</button>
+                  <Link to="/events" className="text-purple-600 font-medium hover:underline">View Events &rarr;</Link>
+                </div>
+                <div className="p-6 bg-green-50 rounded-lg border border-green-100 mt-6">
+                   <h3 className="font-semibold text-lg text-green-800 mb-2">Dashboard</h3>
+                   <p className="text-gray-600 mb-4">Go to your full dashboard for more options.</p>
+                   <Link to="/dashboard" className="text-green-600 font-medium hover:underline">Go to Dashboard &rarr;</Link>
                 </div>
               </div>
             </div>
