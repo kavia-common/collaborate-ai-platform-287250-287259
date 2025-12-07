@@ -107,8 +107,13 @@ const ChatBot = () => {
         ));
       }
     } catch (error) {
-      console.error("Chat error", error);
-      setMessages(prev => [...prev, { id: Date.now(), role: 'model', content: "I'm having trouble connecting right now. Please try again." }]);
+      console.error("ChatBot: Chat error", error);
+      // Display actual error message to user
+      setMessages(prev => [...prev, { 
+        id: Date.now(), 
+        role: 'model', 
+        content: `I'm having trouble connecting. (${error.message})` 
+      }]);
     } finally {
       setIsTyping(false);
     }
