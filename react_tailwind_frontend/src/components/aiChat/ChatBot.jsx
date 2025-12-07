@@ -146,10 +146,10 @@ const ChatBot = () => {
       {!isOpen && (
         <button
           onClick={handleOpen}
-          className="fixed bottom-6 right-6 z-50 p-4 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-full shadow-lg shadow-blue-500/30 hover:scale-105 active:scale-95 transition-all duration-300 animate-bounce-subtle flex items-center justify-center group"
+          className="fixed bottom-6 right-6 z-50 p-4 bg-gradient-to-br from-primary-600 to-primary-700 text-white rounded-full shadow-lg shadow-primary-500/30 hover:scale-105 active:scale-95 transition-all duration-300 motion-safe:animate-bounce-subtle flex items-center justify-center group"
           aria-label="Open AI Chat"
         >
-          <Sparkles size={24} className="group-hover:rotate-12 transition-transform" />
+          <Sparkles size={24} className="group-hover:rotate-12 transition-transform text-secondary-100" />
         </button>
       )}
 
@@ -160,17 +160,17 @@ const ChatBot = () => {
         style={{ height: 'min(600px, 85vh)' }}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500/10 to-gray-50 p-4 flex items-center justify-between border-b border-gray-100/50 backdrop-blur-sm">
+        <div className="bg-gradient-to-r from-primary-500/5 to-gray-50 p-4 flex items-center justify-between border-b border-gray-100/50 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-sm">
-                 <Sparkles size={16} />
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary-600 to-primary-500 flex items-center justify-center text-white shadow-sm">
+                 <Sparkles size={16} className="text-secondary-100" />
               </div>
               <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
             </div>
             <div>
               <h3 className="font-semibold text-gray-800 text-sm">AI Facilitator</h3>
-              <p className="text-xs text-blue-600 font-medium">Ocean Professional</p>
+              <p className="text-xs text-primary-600 font-medium">Ocean Professional</p>
             </div>
           </div>
           <div className="flex gap-1">
@@ -185,7 +185,7 @@ const ChatBot = () => {
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 bg-white/50 space-y-2 scroll-smooth">
+        <div className="flex-1 overflow-y-auto p-4 bg-white/30 space-y-4 scroll-smooth">
           {messages.map((msg) => (
             <MessageBubble 
               key={msg.id} 

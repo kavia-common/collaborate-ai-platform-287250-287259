@@ -39,6 +39,21 @@ module.exports = {
           secondary: '#4B5563', // gray-600
           light: '#9CA3AF', // gray-400
         }
+      },
+      animation: {
+        'fade-in-up': 'fadeInUp 0.25s ease-out forwards',
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'bounce-subtle': 'bounceSubtle 2s infinite',
+      },
+      keyframes: {
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        bounceSubtle: {
+          '0%, 100%': { transform: 'translateY(-5%)' },
+          '50%': { transform: 'translateY(0)' },
+        }
       }
     },
   },
